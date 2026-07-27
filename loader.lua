@@ -42,6 +42,31 @@ local function executeScript(scriptName)
     return false
 end
 
+local function loadScript()
+    local games = loadGamesList()
+    local currentPlaceId = getCurrentGameId()
+    local foundGame = nil
+
+    for _, gameData in ipairs(games) do
+        if tostring(gameData.gameId) == currentPlaceId then
+            foundGame = gameData
+            break
+        end
+    end
+
+    if foundGame then
+        print("[UserHub] Found script for: " .. foundGame.name)
+        local success = executeScript(foundGame.id)
+        if success then
+            print("[UserHub] Loaded: " .. foundGame.name)
+        else
+            warn("[UserHub] Failed to load script: " .. foundGame.id)
+        end
+    else
+        print("[UserHub] No script found for this game (PlaceId: " .. currentPlaceId .. ")")
+    end
+end
+
 local function createKeyGUI()
     local Players = game:GetService("Players")
     local Player = Players.LocalPlayer
@@ -104,6 +129,7 @@ local function createKeyGUI()
     keyBox.Font = Enum.Font.Gotham
     keyBox.PlaceholderText = "Enter key here..."
     keyBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 120)
+    keyBox.ClearTextOnFocus = false
     
     local keyCorner = Instance.new("UICorner")
     keyCorner.Parent = keyBox
@@ -153,40 +179,14 @@ local function createKeyGUI()
             statusLabel.Text = "Invalid key! Please try again."
             statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
             keyBox.Text = ""
-            keyBox:CaptureFocus()
         end
     end)
     
     keyBox.FocusLost:Connect(function(enterPressed)
         if enterPressed then
-            submitButton:CaptureFocus()
+            submitButton.MouseButton1Click:Fire()
         end
     end)
-end
-
-local function loadScript()
-    local games = loadGamesList()
-    local currentPlaceId = getCurrentGameId()
-    local foundGame = nil
-
-    for _, gameData in ipairs(games) do
-        if tostring(gameData.gameId) == currentPlaceId then
-            foundGame = gameData
-            break
-        end
-    end
-
-    if foundGame then
-        print("[UserHub] Found script for: " .. foundGame.name)
-        local success = executeScript(foundGame.id)
-        if success then
-            print("[UserHub] Loaded: " .. foundGame.name)
-        else
-            warn("[UserHub] Failed to load script: " .. foundGame.id)
-        end
-    else
-        print("[UserHub] No script found for this game (PlaceId: " .. currentPlaceId .. ")")
-    end
 end
 
 createKeyGUI()
