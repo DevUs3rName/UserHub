@@ -83,12 +83,12 @@ local function showKeyGUI()
                 screenGui:Destroy()
                 loadMainScript()
             else
-                errorLabel.Text = "❌ Nieprawidłowy klucz!"
+                errorLabel.Text = "❌ Invalid Key!"
                 wait(2)
                 errorLabel.Text = ""
             end
         else
-            errorLabel.Text = "❌ Wpisz klucz!"
+            errorLabel.Text = "❌ Invalid Key!"
             wait(2)
             errorLabel.Text = ""
         end
