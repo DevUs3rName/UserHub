@@ -14,6 +14,18 @@ local teleportTimer = 0
 local originalPosition = nil
 local isTeleporting = false
 
+local function teleportToPosition(pos)
+    if not Character or not Character.Parent then
+        Character = Player.Character
+        if not Character then return end
+        HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+    end
+    
+    if not HumanoidRootPart then return end
+    
+    HumanoidRootPart.CFrame = CFrame.new(pos)
+end
+
 local function teleportToTarget()
     if not Character or not Character.Parent then
         Character = Player.Character
@@ -82,6 +94,18 @@ local function updateTimer()
     end
 end
 
+local TeleportsTab = Window:CreateTab("Teleports", 1)
+
+local TeleportsSection = TeleportsTab:CreateSection("Lokacje")
+
+TeleportsTab:CreateButton({
+    Name = "Elite",
+    Callback = function()
+        local elitePos = Vector3.new(-858.5923461914062, 87.2798843383789, -32422.427734375)
+        teleportToPosition(elitePos)
+    end
+})
+
 game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
     if isActive and not isTeleporting then
         teleportTimer = teleportTimer + deltaTime
@@ -95,4 +119,4 @@ game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
     end
 end)
 
-updateTimer()   
+updateTimer()
