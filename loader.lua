@@ -42,7 +42,6 @@ local function executeScript(scriptName)
     return false
 end
 
--- Główna logika
 local games = loadGamesList()
 local currentPlaceId = getCurrentGameId()
 local foundGame = nil
@@ -55,13 +54,13 @@ for _, gameData in ipairs(games) do
 end
 
 if foundGame then
-    print("[UserHub] Znaleziono skrypt dla: " .. foundGame.name)
+    print("[UserHub] Found script for: " .. foundGame.name)
     local success = executeScript(foundGame.id)
     if success then
-        print("[UserHub] Zaladowano: " .. foundGame.name)
+        print("[UserHub] Loaded: " .. foundGame.name)
     else
-        warn("[UserHub] Blad ladowania skryptu: " .. foundGame.id)
+        warn("[UserHub] Failed to load script: " .. foundGame.id)
     end
 else
-    print("[UserHub] Brak skryptu dla tej gry (PlaceId: " .. currentPlaceId .. ")")
+    print("[UserHub] No script found for this game (PlaceId: " .. currentPlaceId .. ")")
 end
