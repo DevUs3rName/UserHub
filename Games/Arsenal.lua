@@ -1,13 +1,3 @@
---[[
-    Arsenal Script - Rayfield UI
-    Aimbot + Silent Aim + ESP + Detection
-]]
-
--- Sprawdzenie czy to Arsenal
-if game.PlaceId ~= 286090429 then 
-    return
-end
-
 if _G.AimBotScript then
     _G.AimBotScript:Destroy() 
 end
