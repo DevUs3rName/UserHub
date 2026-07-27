@@ -149,7 +149,7 @@ TeleportsTab:CreateButton({
 TeleportsTab:CreateButton({
     Name = "Soccer",
     Callback = function()
-        local soccerPos = Vector3.new(-1047.52, 25.11,, -1054.85)
+        local soccerPos = Vector3.new(-1047.52, 25.11, -1054.85)
         teleportToPosition(soccerPos)
     end
 })
