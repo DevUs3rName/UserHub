@@ -3,7 +3,7 @@ local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 
 -- Ustawienia GitHub
-local GITHUB_RAW_URL = "https://raw.githubusercontent.com/TwojeRepo/UserHub/main/"
+local GITHUB_RAW_URL = "https://raw.githubusercontent.com/DevUs3rName/UserHub/main/"
 local GAMES_JSON_URL = GITHUB_RAW_URL .. "games.json"
 
 -- Funkcja do pobierania zawartości skryptu z GitHub
