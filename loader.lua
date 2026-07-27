@@ -1,4 +1,27 @@
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+if not player then
+    Players.PlayerAdded:Wait()
+    player = Players.LocalPlayer
+end
+
 local HttpService = game:GetService("HttpService")
+
+local function safeJSONDecode(jsonString)
+    local success, result = pcall(function()
+        return HttpService:JSONDecode(jsonString)
+    end)
+    if success and result then
+        return result
+    else
+        return nil
+    end
+end
 
 local GITHUB_RAW_URL = "https://raw.githubusercontent.com/DevUs3rName/UserHub/main/"
 local GAMES_JSON_URL = GITHUB_RAW_URL .. "games.json"
@@ -17,9 +40,12 @@ local function isValidKey(inputKey)
 end
 
 local function showKeyGUI()
+    local player = Players.LocalPlayer
+    if not player then return end
+    
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "KeySystem"
-    screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    screenGui.Parent = player:WaitForChild("PlayerGui")
     
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 350, 0, 180)
@@ -97,6 +123,11 @@ end
 
 local function loadMainScript()
     local games = loadGamesList()
+    if not games or #games == 0 then
+        print("[UserHub] No games found or failed to load games list")
+        return
+    end
+    
     local currentPlaceId = getCurrentGameId()
     local foundGame = nil
     
@@ -139,11 +170,12 @@ local function loadGamesList()
     end)
     
     if success and result then
-        local data = HttpService:JSONDecode(result)
-        return data.games or {}
-    else
-        return {}
+        local data = safeJSONDecode(result)
+        if data and data.games then
+            return data.games
+        end
     end
+    return {}
 end
 
 local function getCurrentGameId()
@@ -153,10 +185,28 @@ end
 local function executeScript(scriptName)
     local scriptContent = getScriptContent(scriptName)
     if scriptContent then
-        loadstring(scriptContent)()
-        return true
+        -- BEZPIECZNY loadstring
+        local loadSuccess, loadResult = pcall(function()
+            return loadstring(scriptContent)
+        end)
+        
+        if loadSuccess and loadResult then
+            local execSuccess, execResult = pcall(function()
+                loadResult()
+            end)
+            if execSuccess then
+                return true
+            else
+                warn("[UserHub] Script execution error: " .. tostring(execResult))
+                return false
+            end
+        else
+            warn("[UserHub] Failed to loadstring: " .. tostring(loadResult))
+            return false
+        end
     end
     return false
 end
 
+-- Uruchomienie
 showKeyGUI()
