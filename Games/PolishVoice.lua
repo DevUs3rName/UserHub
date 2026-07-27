@@ -106,6 +106,54 @@ TeleportsTab:CreateButton({
     end
 })
 
+TeleportsTab:CreateButton({
+    Name = "News",
+    Callback = function()
+        local newsPos = Vector3.new(1734.02001953125, 28.369802474975586, -1202.1199951171875)
+        teleportToPosition(newsPos)
+    end
+})
+
+TeleportsTab:CreateButton({
+    Name = "Beach",
+    Callback = function()
+        local beachPos = Vector3.new(-929.1425170898438, 14.865099906921387, -733.673583984375)
+        teleportToPosition(beachPos)
+    end
+})
+
+TeleportsTab:CreateButton({
+    Name = "Go-Kart",
+    Callback = function()
+        local gokartPos = Vector3.new(-920.2070922851562, 25.77408790588379, -1229.408203125)
+        teleportToPosition(gokartPos)
+    end
+})
+
+TeleportsTab:CreateButton({
+    Name = "Shop",
+    Callback = function()
+        local shopPos = Vector3.new(-858.1865234375, 26.63401222229004, -834.172607421875)
+        teleportToPosition(shopPos)
+    end
+})
+
+TeleportsTab:CreateButton({
+    Name = "Stage",
+    Callback = function()
+        local stagePos = Vector3.new(-730.2810668945312, 26.386600494384766, -1107.3328857421875)
+        teleportToPosition(stagePos)
+    end
+})
+
+TeleportsTab:CreateButton({
+    Name = "Soccer",
+    Callback = function()
+        local soccerPos = Vector3.new(-85.2969970703125, 88.9990005493164, 89.93599700927734)
+        teleportToPosition(soccerPos)
+    end
+})
+
 game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
     if isActive and not isTeleporting then
         teleportTimer = teleportTimer + deltaTime
