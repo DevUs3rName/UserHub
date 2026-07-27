@@ -2,11 +2,9 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 
--- Ustawienia GitHub
 local GITHUB_RAW_URL = "https://raw.githubusercontent.com/DevUs3rName/UserHub/main/"
 local GAMES_JSON_URL = GITHUB_RAW_URL .. "games.json"
 
--- Funkcja do pobierania zawartości skryptu z GitHub
 local function getScriptContent(scriptName)
     local url = GITHUB_RAW_URL .. "Games/" .. scriptName .. ".lua"
     local success, result = pcall(function()
@@ -21,7 +19,6 @@ local function getScriptContent(scriptName)
     end
 end
 
--- Funkcja do pobierania listy gier z GitHub
 local function loadGamesList()
     local success, result = pcall(function()
         return game:HttpGet(GAMES_JSON_URL)
@@ -31,23 +28,24 @@ local function loadGamesList()
         local data = HttpService:JSONDecode(result)
         return data.games or {}
     else
-        warn("Nie można pobrać listy gier, używam domyślnej")
+        return {}
     end
 end
 
--- Funkcja do wykonania skryptu
+local function getCurrentGameId()
+    local placeId = game.PlaceId
+    return tostring(placeId)
+end
+
 local function executeScript(scriptName)
     local scriptContent = getScriptContent(scriptName)
     if scriptContent then
         loadstring(scriptContent)()
         return true
-    else
-        warn("Nie znaleziono skryptu: " .. scriptName)
-        return false
     end
+    return false
 end
 
--- Tworzenie GUI
 local function createGUI()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "UserHubLoader"
@@ -59,179 +57,152 @@ local function createGUI()
     mainFrame.Parent = screenGui
     mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    mainFrame.Size = UDim2.new(0, 400, 0, 500)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-    mainFrame.BackgroundTransparency = 0.1
+    mainFrame.Size = UDim2.new(0, 350, 0, 200)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    mainFrame.BackgroundTransparency = 0.05
     mainFrame.BorderSizePixel = 0
     mainFrame.ClipsDescendants = true
     
     local corner = Instance.new("UICorner")
     corner.Parent = mainFrame
-    corner.CornerRadius = UDim.new(0, 12)
+    corner.CornerRadius = UDim.new(0, 16)
     
-    local titleBar = Instance.new("Frame")
-    titleBar.Name = "TitleBar"
-    titleBar.Parent = mainFrame
-    titleBar.Size = UDim2.new(1, 0, 0, 50)
-    titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-    titleBar.BackgroundTransparency = 0.3
-    titleBar.BorderSizePixel = 0
+    local glow = Instance.new("Frame")
+    glow.Name = "Glow"
+    glow.Parent = mainFrame
+    glow.Size = UDim2.new(1, 20, 1, 20)
+    glow.Position = UDim2.new(-0.03, 0, -0.05, 0)
+    glow.BackgroundColor3 = Color3.fromRGB(60, 120, 255)
+    glow.BackgroundTransparency = 0.9
+    glow.BorderSizePixel = 0
     
-    local titleCorner = Instance.new("UICorner")
-    titleCorner.Parent = titleBar
-    titleCorner.CornerRadius = UDim.new(0, 12)
+    local glowCorner = Instance.new("UICorner")
+    glowCorner.Parent = glow
+    glowCorner.CornerRadius = UDim.new(0, 20)
     
     local title = Instance.new("TextLabel")
     title.Name = "Title"
-    title.Parent = titleBar
-    title.Size = UDim2.new(1, 0, 1, 0)
+    title.Parent = mainFrame
+    title.Size = UDim2.new(1, 0, 0, 50)
+    title.Position = UDim2.new(0, 0, 0, 10)
     title.BackgroundTransparency = 1
-    title.Text = "UserHub Loader"
+    title.Text = "UserHub"
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.TextSize = 24
+    title.TextSize = 32
     title.Font = Enum.Font.GothamBold
     title.TextXAlignment = Enum.TextXAlignment.Center
     
-    local subtitle = Instance.new("TextLabel")
-    subtitle.Name = "Subtitle"
-    subtitle.Parent = titleBar
-    subtitle.Size = UDim2.new(1, 0, 0, 20)
-    subtitle.Position = UDim2.new(0, 0, 1, -20)
-    subtitle.BackgroundTransparency = 1
-    subtitle.Text = "Wybierz gre do zaladowania"
-    subtitle.TextColor3 = Color3.fromRGB(150, 150, 170)
-    subtitle.TextSize = 12
-    subtitle.Font = Enum.Font.Gotham
-    subtitle.TextXAlignment = Enum.TextXAlignment.Center
+    local statusLabel = Instance.new("TextLabel")
+    statusLabel.Name = "StatusLabel"
+    statusLabel.Parent = mainFrame
+    statusLabel.Size = UDim2.new(1, -40, 0, 30)
+    statusLabel.Position = UDim2.new(0, 20, 0, 65)
+    statusLabel.BackgroundTransparency = 1
+    statusLabel.Text = "Szukanie skryptu dla tej gry..."
+    statusLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
+    statusLabel.TextSize = 14
+    statusLabel.Font = Enum.Font.Gotham
+    statusLabel.TextXAlignment = Enum.TextXAlignment.Center
     
-    local loadingLabel = Instance.new("TextLabel")
-    loadingLabel.Name = "LoadingLabel"
-    loadingLabel.Parent = mainFrame
-    loadingLabel.Size = UDim2.new(1, 0, 0, 30)
-    loadingLabel.Position = UDim2.new(0, 0, 0, 55)
-    loadingLabel.BackgroundTransparency = 1
-    loadingLabel.Text = "Ladowanie listy gier..."
-    loadingLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    loadingLabel.TextSize = 14
-    loadingLabel.Font = Enum.Font.Gotham
+    local loadingBar = Instance.new("Frame")
+    loadingBar.Name = "LoadingBar"
+    loadingBar.Parent = mainFrame
+    loadingBar.Size = UDim2.new(0.8, 0, 0, 4)
+    loadingBar.Position = UDim2.new(0.1, 0, 0, 105)
+    loadingBar.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    loadingBar.BorderSizePixel = 0
     
-    local gamesList = Instance.new("ScrollingFrame")
-    gamesList.Name = "GamesList"
-    gamesList.Parent = mainFrame
-    gamesList.Size = UDim2.new(1, -20, 1, -110)
-    gamesList.Position = UDim2.new(0, 10, 0, 90)
-    gamesList.BackgroundTransparency = 1
-    gamesList.BorderSizePixel = 0
-    gamesList.ScrollBarThickness = 4
-    gamesList.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 70)
-    gamesList.Visible = false
+    local loadingBarCorner = Instance.new("UICorner")
+    loadingBarCorner.Parent = loadingBar
+    loadingBarCorner.CornerRadius = UDim.new(1, 0)
     
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.Parent = gamesList
-    listLayout.Padding = UDim.new(0, 10)
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    local progressBar = Instance.new("Frame")
+    progressBar.Name = "ProgressBar"
+    progressBar.Parent = loadingBar
+    progressBar.Size = UDim2.new(0, 0, 1, 0)
+    progressBar.BackgroundColor3 = Color3.fromRGB(60, 120, 255)
+    progressBar.BorderSizePixel = 0
     
-    -- Przycisk zamknięcia
+    local progressCorner = Instance.new("UICorner")
+    progressCorner.Parent = progressBar
+    progressCorner.CornerRadius = UDim.new(1, 0)
+    
+    local gameNameLabel = Instance.new("TextLabel")
+    gameNameLabel.Name = "GameNameLabel"
+    gameNameLabel.Parent = mainFrame
+    gameNameLabel.Size = UDim2.new(1, -40, 0, 25)
+    gameNameLabel.Position = UDim2.new(0, 20, 0, 120)
+    gameNameLabel.BackgroundTransparency = 1
+    gameNameLabel.Text = ""
+    gameNameLabel.TextColor3 = Color3.fromRGB(150, 150, 170)
+    gameNameLabel.TextSize = 12
+    gameNameLabel.Font = Enum.Font.Gotham
+    gameNameLabel.TextXAlignment = Enum.TextXAlignment.Center
+    
     local closeButton = Instance.new("TextButton")
     closeButton.Name = "CloseButton"
     closeButton.Parent = mainFrame
-    closeButton.Size = UDim2.new(0, 80, 0, 35)
-    closeButton.Position = UDim2.new(1, -95, 1, -48)
-    closeButton.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-    closeButton.BorderSizePixel = 0
-    closeButton.Text = "Zamknij"
-    closeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-    closeButton.TextSize = 14
+    closeButton.Size = UDim2.new(0, 30, 0, 30)
+    closeButton.Position = UDim2.new(1, -40, 0, 10)
+    closeButton.BackgroundTransparency = 1
+    closeButton.Text = "✕"
+    closeButton.TextColor3 = Color3.fromRGB(150, 150, 170)
+    closeButton.TextSize = 18
     closeButton.Font = Enum.Font.Gotham
-    
-    local closeCorner = Instance.new("UICorner")
-    closeCorner.Parent = closeButton
-    closeCorner.CornerRadius = UDim.new(0, 6)
+    closeButton.BorderSizePixel = 0
     
     closeButton.MouseButton1Click:Connect(function()
         screenGui:Destroy()
     end)
     
-    -- Wczytaj gry
-    local games = loadGamesList()
-    
-    loadingLabel.Visible = false
-    gamesList.Visible = true
-    
-    for _, gameData in ipairs(games) do
-        local gameButton = Instance.new("Frame")
-        gameButton.Name = "GameButton_" .. gameData.id
-        gameButton.Parent = gamesList
-        gameButton.Size = UDim2.new(1, 0, 0, 80)
-        gameButton.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
-        gameButton.BackgroundTransparency = 0.3
-        gameButton.BorderSizePixel = 0
-        
-        local btnCorner = Instance.new("UICorner")
-        btnCorner.Parent = gameButton
-        btnCorner.CornerRadius = UDim.new(0, 8)
-        
-        local gameName = Instance.new("TextLabel")
-        gameName.Name = "GameName"
-        gameName.Parent = gameButton
-        gameName.Size = UDim2.new(1, -20, 0, 25)
-        gameName.Position = UDim2.new(0, 10, 0, 8)
-        gameName.BackgroundTransparency = 1
-        gameName.Text = gameData.name
-        gameName.TextColor3 = Color3.fromRGB(255, 255, 255)
-        gameName.TextSize = 18
-        gameName.Font = Enum.Font.GothamBold
-        gameName.TextXAlignment = Enum.TextXAlignment.Left
-        
-        local gameDesc = Instance.new("TextLabel")
-        gameDesc.Name = "GameDesc"
-        gameDesc.Parent = gameButton
-        gameDesc.Size = UDim2.new(1, -20, 0, 20)
-        gameDesc.Position = UDim2.new(0, 10, 0, 35)
-        gameDesc.BackgroundTransparency = 1
-        gameDesc.Text = gameData.description or "Brak opisu"
-        gameDesc.TextColor3 = Color3.fromRGB(150, 150, 170)
-        gameDesc.TextSize = 13
-        gameDesc.Font = Enum.Font.Gotham
-        gameDesc.TextXAlignment = Enum.TextXAlignment.Left
-        
-        local loadButton = Instance.new("TextButton")
-        loadButton.Name = "LoadButton"
-        loadButton.Parent = gameButton
-        loadButton.Size = UDim2.new(0, 100, 0, 30)
-        loadButton.Position = UDim2.new(1, -110, 1, -38)
-        loadButton.BackgroundColor3 = Color3.fromRGB(60, 120, 255)
-        loadButton.BorderSizePixel = 0
-        loadButton.Text = "Zaladuj"
-        loadButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        loadButton.TextSize = 14
-        loadButton.Font = Enum.Font.GothamBold
-        
-        local loadCorner = Instance.new("UICorner")
-        loadCorner.Parent = loadButton
-        loadCorner.CornerRadius = UDim.new(0, 6)
-        
-        loadButton.MouseButton1Click:Connect(function()
-            loadButton.Text = "Ladowanie..."
-            loadButton.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-            loadButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-            
-            local success = executeScript(gameData.id)
-            if success then
-                screenGui:Destroy()
-            else
-                loadButton.Text = "Blad"
-                loadButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-                loadButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-                task.wait(1)
-                loadButton.Text = "Zaladuj"
-                loadButton.BackgroundColor3 = Color3.fromRGB(60, 120, 255)
-                loadButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            end
-        end)
-    end
-    
-    return screenGui
+    return screenGui, statusLabel, progressBar, gameNameLabel
 end
 
-createGUI()
+local gui, statusLabel, progressBar, gameNameLabel = createGUI()
+
+local games = loadGamesList()
+local currentPlaceId = getCurrentGameId()
+local foundGame = nil
+local foundScript = nil
+
+for _, gameData in ipairs(games) do
+    if tostring(gameData.gameId) == currentPlaceId then
+        foundGame = gameData
+        break
+    end
+end
+
+if foundGame then
+    statusLabel.Text = "Znaleziono skrypt!"
+    gameNameLabel.Text = foundGame.name
+    
+    for i = 1, 100 do
+        progressBar.Size = UDim2.new(i / 100, 0, 1, 0)
+        task.wait(0.005)
+    end
+    
+    task.wait(0.2)
+    
+    statusLabel.Text = "Ladowanie..."
+    task.wait(0.3)
+    
+    local success = executeScript(foundGame.id)
+    
+    if success then
+        statusLabel.Text = "Zaladowano!"
+        statusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+        progressBar.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
+        task.wait(0.5)
+        gui:Destroy()
+    else
+        statusLabel.Text = "Blad ladowania!"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+        progressBar.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    end
+else
+    statusLabel.Text = "Brak skryptu dla tej gry"
+    statusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+    progressBar.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+    progressBar.Size = UDim2.new(1, 0, 1, 0)
+    gameNameLabel.Text = "Gra nie jest wspierana"
+end
