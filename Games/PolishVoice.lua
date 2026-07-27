@@ -1,10 +1,3 @@
---[[
-    UserHub | AutoFarm Coins
-    Skrypt do automatycznego teleportowania na wskazane koordynaty co 10 minut
-    Z powrotem na oryginalną pozycję po teleporcie
-    Wymaga Rayfield Library
-]]
-
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Players = game:GetService("Players")
