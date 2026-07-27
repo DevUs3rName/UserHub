@@ -1,155 +1,7 @@
-if not game:IsLoaded() then
-    game.Loaded:Wait()
-end
-
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-
-if not player then
-    Players.PlayerAdded:Wait()
-    player = Players.LocalPlayer
-end
-
 local HttpService = game:GetService("HttpService")
-
-local function safeJSONDecode(jsonString)
-    local success, result = pcall(function()
-        return HttpService:JSONDecode(jsonString)
-    end)
-    if success and result then
-        return result
-    else
-        return nil
-    end
-end
 
 local GITHUB_RAW_URL = "https://raw.githubusercontent.com/DevUs3rName/UserHub/main/"
 local GAMES_JSON_URL = GITHUB_RAW_URL .. "games.json"
-
-local VALID_KEYS = {
-    "420Userhubthebest69"
-}
-
-local function isValidKey(inputKey)
-    for _, key in ipairs(VALID_KEYS) do
-        if key == inputKey then
-            return true
-        end
-    end
-    return false
-end
-
-local function showKeyGUI()
-    local player = Players.LocalPlayer
-    if not player then return end
-    
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "KeySystem"
-    screenGui.Parent = player:WaitForChild("PlayerGui")
-    
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 350, 0, 180)
-    frame.Position = UDim2.new(0.5, -175, 0.5, -90)
-    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    frame.BorderSizePixel = 0
-    frame.BackgroundTransparency = 0.95
-    frame.Parent = screenGui
-    
-    local background = Instance.new("Frame")
-    background.Size = UDim2.new(1, 0, 1, 0)
-    background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    background.BackgroundTransparency = 0.5
-    background.Parent = frame
-    
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, 0, 0, 40)
-    title.Position = UDim2.new(0, 0, 0, 10)
-    title.BackgroundTransparency = 1
-    title.Text = "UserHub - Wpisz klucz"
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.TextSize = 20
-    title.Font = Enum.Font.GothamBold
-    title.Parent = frame
-    
-    local textBox = Instance.new("TextBox")
-    textBox.Size = UDim2.new(0.8, 0, 0, 40)
-    textBox.Position = UDim2.new(0.1, 0, 0, 60)
-    textBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    textBox.TextSize = 16
-    textBox.Font = Enum.Font.Gotham
-    textBox.PlaceholderText = "Wpisz swój klucz..."
-    textBox.Text = ""
-    textBox.Parent = frame
-    
-    local confirmBtn = Instance.new("TextButton")
-    confirmBtn.Size = UDim2.new(0.4, 0, 0, 35)
-    confirmBtn.Position = UDim2.new(0.3, 0, 0, 115)
-    confirmBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    confirmBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    confirmBtn.TextSize = 16
-    confirmBtn.Font = Enum.Font.GothamBold
-    confirmBtn.Text = "Potwierdź"
-    confirmBtn.Parent = frame
-    
-    local errorLabel = Instance.new("TextLabel")
-    errorLabel.Size = UDim2.new(1, 0, 0, 25)
-    errorLabel.Position = UDim2.new(0, 0, 0, 155)
-    errorLabel.BackgroundTransparency = 1
-    errorLabel.Text = ""
-    errorLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
-    errorLabel.TextSize = 14
-    errorLabel.Font = Enum.Font.Gotham
-    errorLabel.Parent = frame
-    
-    confirmBtn.MouseButton1Click:Connect(function()
-        local key = textBox.Text
-        if key ~= "" then
-            if isValidKey(key) then
-                screenGui:Destroy()
-                loadMainScript()
-            else
-                errorLabel.Text = "❌ Invalid Key!"
-                wait(2)
-                errorLabel.Text = ""
-            end
-        else
-            errorLabel.Text = "❌ Invalid Key!"
-            wait(2)
-            errorLabel.Text = ""
-        end
-    end)
-end
-
-local function loadMainScript()
-    local games = loadGamesList()
-    if not games or #games == 0 then
-        print("[UserHub] No games found or failed to load games list")
-        return
-    end
-    
-    local currentPlaceId = getCurrentGameId()
-    local foundGame = nil
-    
-    for _, gameData in ipairs(games) do
-        if tostring(gameData.gameId) == currentPlaceId then
-            foundGame = gameData
-            break
-        end
-    end
-    
-    if foundGame then
-        print("[UserHub] Found script for: " .. foundGame.name)
-        local success = executeScript(foundGame.id)
-        if success then
-            print("[UserHub] Loaded: " .. foundGame.name)
-        else
-            warn("[UserHub] Failed to load script: " .. foundGame.id)
-        end
-    else
-        print("[UserHub] No script found for this game (PlaceId: " .. currentPlaceId .. ")")
-    end
-end
 
 local function getScriptContent(scriptName)
     local url = GITHUB_RAW_URL .. "Games/" .. scriptName .. ".lua"
@@ -170,12 +22,11 @@ local function loadGamesList()
     end)
     
     if success and result then
-        local data = safeJSONDecode(result)
-        if data and data.games then
-            return data.games
-        end
+        local data = HttpService:JSONDecode(result)
+        return data.games or {}
+    else
+        return {}
     end
-    return {}
 end
 
 local function getCurrentGameId()
@@ -185,28 +36,157 @@ end
 local function executeScript(scriptName)
     local scriptContent = getScriptContent(scriptName)
     if scriptContent then
-        -- BEZPIECZNY loadstring
-        local loadSuccess, loadResult = pcall(function()
-            return loadstring(scriptContent)
-        end)
-        
-        if loadSuccess and loadResult then
-            local execSuccess, execResult = pcall(function()
-                loadResult()
-            end)
-            if execSuccess then
-                return true
-            else
-                warn("[UserHub] Script execution error: " .. tostring(execResult))
-                return false
-            end
-        else
-            warn("[UserHub] Failed to loadstring: " .. tostring(loadResult))
-            return false
-        end
+        loadstring(scriptContent)()
+        return true
     end
     return false
 end
 
--- Uruchomienie
-showKeyGUI()
+local function createKeyGUI()
+    local Players = game:GetService("Players")
+    local Player = Players.LocalPlayer
+    
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "UserHubKeySystem"
+    screenGui.Parent = Player.PlayerGui
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Parent = screenGui
+    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    mainFrame.Size = UDim2.new(0, 350, 0, 220)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    mainFrame.BackgroundTransparency = 0.1
+    mainFrame.BorderSizePixel = 0
+    mainFrame.ClipsDescendants = true
+    
+    local corner = Instance.new("UICorner")
+    corner.Parent = mainFrame
+    corner.CornerRadius = UDim.new(0, 12)
+    
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Parent = mainFrame
+    title.Size = UDim2.new(1, 0, 0, 50)
+    title.Position = UDim2.new(0, 0, 0, 15)
+    title.BackgroundTransparency = 1
+    title.Text = "UserHub Key System"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 24
+    title.Font = Enum.Font.GothamBold
+    title.TextXAlignment = Enum.TextXAlignment.Center
+    
+    local subtitle = Instance.new("TextLabel")
+    subtitle.Name = "Subtitle"
+    subtitle.Parent = mainFrame
+    subtitle.Size = UDim2.new(1, -40, 0, 25)
+    subtitle.Position = UDim2.new(0, 20, 0, 70)
+    subtitle.BackgroundTransparency = 1
+    subtitle.Text = "Enter your key to continue"
+    subtitle.TextColor3 = Color3.fromRGB(150, 150, 170)
+    subtitle.TextSize = 14
+    subtitle.Font = Enum.Font.Gotham
+    subtitle.TextXAlignment = Enum.TextXAlignment.Center
+    
+    local keyBox = Instance.new("TextBox")
+    keyBox.Name = "KeyBox"
+    keyBox.Parent = mainFrame
+    keyBox.Size = UDim2.new(0.8, 0, 0, 40)
+    keyBox.Position = UDim2.new(0.1, 0, 0, 105)
+    keyBox.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    keyBox.BackgroundTransparency = 0.3
+    keyBox.BorderSizePixel = 0
+    keyBox.Text = ""
+    keyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    keyBox.TextSize = 16
+    keyBox.Font = Enum.Font.Gotham
+    keyBox.PlaceholderText = "Enter key here..."
+    keyBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 120)
+    
+    local keyCorner = Instance.new("UICorner")
+    keyCorner.Parent = keyBox
+    keyCorner.CornerRadius = UDim.new(0, 8)
+    
+    local submitButton = Instance.new("TextButton")
+    submitButton.Name = "SubmitButton"
+    submitButton.Parent = mainFrame
+    submitButton.Size = UDim2.new(0.5, 0, 0, 40)
+    submitButton.Position = UDim2.new(0.25, 0, 0, 160)
+    submitButton.BackgroundColor3 = Color3.fromRGB(60, 120, 255)
+    submitButton.BorderSizePixel = 0
+    submitButton.Text = "Submit"
+    submitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    submitButton.TextSize = 16
+    submitButton.Font = Enum.Font.GothamBold
+    
+    local submitCorner = Instance.new("UICorner")
+    submitCorner.Parent = submitButton
+    submitCorner.CornerRadius = UDim.new(0, 8)
+    
+    local statusLabel = Instance.new("TextLabel")
+    statusLabel.Name = "StatusLabel"
+    statusLabel.Parent = mainFrame
+    statusLabel.Size = UDim2.new(1, -40, 0, 25)
+    statusLabel.Position = UDim2.new(0, 20, 0, 195)
+    statusLabel.BackgroundTransparency = 1
+    statusLabel.Text = ""
+    statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+    statusLabel.TextSize = 12
+    statusLabel.Font = Enum.Font.Gotham
+    statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+    
+    local function verifyKey(inputKey)
+        return inputKey == "420Userhubthebest69"
+    end
+    
+    submitButton.MouseButton1Click:Connect(function()
+        local inputKey = keyBox.Text
+        if verifyKey(inputKey) then
+            statusLabel.Text = "Key accepted! Loading..."
+            statusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+            task.wait(0.5)
+            screenGui:Destroy()
+            loadScript()
+        else
+            statusLabel.Text = "Invalid key! Please try again."
+            statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            keyBox.Text = ""
+            keyBox:CaptureFocus()
+        end
+    end)
+    
+    keyBox.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            submitButton:CaptureFocus()
+        end
+    end)
+end
+
+local function loadScript()
+    local games = loadGamesList()
+    local currentPlaceId = getCurrentGameId()
+    local foundGame = nil
+
+    for _, gameData in ipairs(games) do
+        if tostring(gameData.gameId) == currentPlaceId then
+            foundGame = gameData
+            break
+        end
+    end
+
+    if foundGame then
+        print("[UserHub] Found script for: " .. foundGame.name)
+        local success = executeScript(foundGame.id)
+        if success then
+            print("[UserHub] Loaded: " .. foundGame.name)
+        else
+            warn("[UserHub] Failed to load script: " .. foundGame.id)
+        end
+    else
+        print("[UserHub] No script found for this game (PlaceId: " .. currentPlaceId .. ")")
+    end
+end
+
+createKeyGUI()
