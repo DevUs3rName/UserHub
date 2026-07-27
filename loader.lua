@@ -1,8 +1,3 @@
---[[
-    UserHub AutoLoader
-    Automatycznie wykrywa grę i ładuje odpowiedni skrypt bez GUI
-]]
-
 local HttpService = game:GetService("HttpService")
 
 local GITHUB_RAW_URL = "https://raw.githubusercontent.com/DevUs3rName/UserHub/main/"
