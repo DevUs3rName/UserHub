@@ -5,6 +5,12 @@
             "name": "Polish Voice",
             "gameId": 118475912257657,
             "description": "Polish Voice x UserHub"
+        },
+        {
+            "id": "Arsenal",
+            "name": "Arsenal",
+            "gameId": 286090429,
+            "description": "Arsenal x UserHub"
         }
     ]
 }
